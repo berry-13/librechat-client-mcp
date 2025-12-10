@@ -1,6 +1,6 @@
 /**
- * Resources implementation for the Model Context Protocol (MCP) server.
- * 
+ * Resources implementation for the LibreChat Client MCP server.
+ *
  * This file defines the resources that can be returned by the server based on client requests.
  * Resources are static content or dynamically generated content referenced by URIs.
  */
@@ -13,79 +13,38 @@ import { logError } from '../utils/logger.js';
  */
 export const resources = [
   {
-    name: 'get_components',
-    description: 'List of available shadcn/ui components that can be used in the project',
-    uri: 'resource:get_components',
+    name: 'get_modules',
+    description: 'List of available modules in the LibreChat Client package',
+    uri: 'resource:get_modules',
     contentType: 'text/plain',
   }
 ];
 
 /**
- * Handler for the get_components resource
- * @returns List of available shadcn/ui components
+ * Handler for the get_modules resource
+ * @returns List of available modules in LibreChat Client
  */
-const getComponentsList = async () => {
+const getModulesList = async () => {
   try {
-    // List of available components in shadcn/ui
-    // This hardcoded list can be updated in the future if needed
-    const components = [
-      "accordion",
-      "alert",
-      "alert-dialog",
-      "aspect-ratio",
-      "avatar",
-      "badge",
-      "breadcrumb",
-      "button",
-      "calendar",
-      "card",
-      "carousel",
-      "checkbox",
-      "collapsible",
-      "command",
-      "context-menu",
-      "data-table",
-      "date-picker",
-      "dialog",
-      "drawer",
-      "dropdown-menu",
-      "form",
-      "hover-card",
-      "input",
-      "label",
-      "menubar",
-      "navigation-menu",
-      "pagination",
-      "popover",
-      "progress",
-      "radio-group",
-      "resizable",
-      "scroll-area",
-      "select",
-      "separator",
-      "sheet",
-      "skeleton",
-      "slider",
-      "sonner",
-      "switch",
-      "table",
-      "tabs",
-      "textarea",
-      "toast",
-      "toggle",
-      "toggle-group",
-      "tooltip"
+    // List of available modules in LibreChat Client
+    // This will be populated once we have the actual package structure
+    const modules = [
+      "api",
+      "types",
+      "hooks",
+      "utils",
+      "config"
     ];
-    
+
     return {
-      content: JSON.stringify(components, null, 2),
+      content: JSON.stringify(modules, null, 2),
       contentType: 'application/json',
     };
   } catch (error) {
-    logError("Error fetching components list", error);
+    logError("Error fetching modules list", error);
     return {
       content: JSON.stringify({
-        error: "Failed to fetch components list",
+        error: "Failed to fetch modules list",
         message: error instanceof Error ? error.message : String(error)
       }, null, 2),
       contentType: 'application/json',
@@ -98,5 +57,5 @@ const getComponentsList = async () => {
  * Each handler function returns the resource content when requested
  */
 export const resourceHandlers = {
-  'resource:get_components': getComponentsList,
+  'resource:get_modules': getModulesList,
 };
