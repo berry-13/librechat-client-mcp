@@ -1,11 +1,11 @@
 import { Axios } from "axios";
 import { logError, logWarning, logInfo } from './logger.js';
 
-// Constants for the LibreChat Client repository
+// Constants for the LibreChat Client package in the LibreChat monorepo
 const REPO_OWNER = 'danny-avila';
-const REPO_NAME = 'librechat-client';
+const REPO_NAME = 'LibreChat';
 const REPO_BRANCH = 'main';
-const DEFAULT_PATH = 'src';
+const DEFAULT_PATH = 'packages/client';
 
 // GitHub API for accessing repository structure and metadata
 const githubApi = new Axios({

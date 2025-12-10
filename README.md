@@ -1,6 +1,6 @@
 # LibreChat Client MCP Server
 
-A Model Context Protocol (MCP) server that provides AI assistants with access to the [LibreChat Client](https://github.com/danny-avila/librechat-client) package source code, types, and documentation.
+A Model Context Protocol (MCP) server that provides AI assistants with access to the [LibreChat Client](https://github.com/danny-avila/LibreChat/tree/main/packages/client) package source code, types, and documentation.
 
 ## Features
 
@@ -14,10 +14,10 @@ A Model Context Protocol (MCP) server that provides AI assistants with access to
 
 ```bash
 # Basic usage (60 requests/hour)
-npx @anthropic/librechat-client-mcp
+npx @librechat/client-mcp
 
 # With GitHub token (5000 requests/hour) - Recommended
-npx @anthropic/librechat-client-mcp --github-api-key ghp_your_token_here
+npx @librechat/client-mcp --github-api-key ghp_your_token_here
 ```
 
 ## SSE Transport
@@ -76,10 +76,10 @@ For higher rate limits (5000 requests/hour vs 60):
 
 ```bash
 # Global installation
-npm install -g @anthropic/librechat-client-mcp
+npm install -g @librechat/client-mcp
 
 # Or use npx (recommended)
-npx @anthropic/librechat-client-mcp
+npx @librechat/client-mcp
 ```
 
 ## Development
@@ -94,6 +94,12 @@ npm run build
 # Run in development
 npm run dev
 ```
+
+## Source Repository
+
+This MCP server fetches files from the LibreChat monorepo:
+- Repository: [danny-avila/LibreChat](https://github.com/danny-avila/LibreChat)
+- Package path: `packages/client`
 
 ## License
 

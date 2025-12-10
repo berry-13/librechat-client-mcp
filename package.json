@@ -1,5 +1,5 @@
 {
-  "name": "@anthropic/librechat-client-mcp",
+  "name": "@librechat/client-mcp",
   "version": "0.1.0",
   "description": "A Model Context Protocol (MCP) server for LibreChat Client package, providing AI assistants with access to LibreChat client source code, types, hooks, and API documentation.",
   "type": "module",

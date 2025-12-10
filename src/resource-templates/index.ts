@@ -12,7 +12,7 @@
 export const resourceTemplates = [
   {
     name: "get_installation_guide",
-    description: "Get the installation guide for LibreChat Client based on package manager",
+    description: "Get information about the LibreChat Client package structure",
     uriTemplate: "resource-template:get_installation_guide?packageManager={packageManager}",
     contentType: "text/plain",
   },
@@ -39,58 +39,44 @@ export const getResourceTemplate = (uri: string) => {
   if (uri.startsWith("resource-template:get_installation_guide")) {
     return async () => {
       try {
-        const packageManager = extractParam(uri, "packageManager") || "npm";
+        const guide = `# LibreChat Client Package
 
-        const installCommand = packageManager === "npm"
-          ? "npm install @danny-avila/librechat-client"
-          : packageManager === "pnpm"
-            ? "pnpm add @danny-avila/librechat-client"
-            : packageManager === "yarn"
-              ? "yarn add @danny-avila/librechat-client"
-              : packageManager === "bun"
-                ? "bun add @danny-avila/librechat-client"
-                : "npm install @danny-avila/librechat-client";
+## Overview
 
-        const guide = `# LibreChat Client Installation Guide
+The LibreChat Client package is part of the LibreChat monorepo and provides the client-side functionality for the LibreChat application.
 
-## Installation
+## Source Location
 
-Install the LibreChat Client package using ${packageManager}:
+The client package is located at:
+- Repository: https://github.com/danny-avila/LibreChat
+- Path: \`packages/client\`
 
-\`\`\`bash
-${installCommand}
-\`\`\`
+## Exploring the Package
 
-## Basic Usage
+Use the MCP tools to explore the source code:
 
-\`\`\`typescript
-import { LibreChatClient } from '@danny-avila/librechat-client';
+### List Package Contents
+Use \`list_files\` to see the package structure:
+- \`list_files\` with no arguments lists the root of packages/client
+- \`list_files\` with \`directory: "packages/client/src"\` lists the src directory
 
-// Initialize the client
-const client = new LibreChatClient({
-  baseURL: 'https://your-librechat-instance.com',
-  // Add authentication as needed
-});
+### Read Source Files
+Use \`get_source_file\` to read specific files:
+- Example: \`get_source_file\` with \`filePath: "packages/client/package.json"\`
+- Example: \`get_source_file\` with \`filePath: "packages/client/src/index.ts"\`
 
-// Example: Fetch conversations
-const conversations = await client.getConversations();
-\`\`\`
+### Browse Directory Tree
+Use \`get_directory_structure\` to see the full directory tree:
+- Returns a nested structure of all files and directories
 
-## Configuration
+## Package Structure
 
-The client can be configured with the following options:
-
-- \`baseURL\`: The URL of your LibreChat instance
-- \`apiKey\`: Optional API key for authentication
-- \`timeout\`: Request timeout in milliseconds
-
-## Documentation
-
-For more detailed documentation, use the MCP tools to explore the source code:
-
-- \`get_directory_structure\`: See the package structure
-- \`get_source_file\`: Read specific source files
-- \`list_files\`: List files in directories
+The client package typically contains:
+- \`src/\` - Source code
+- \`package.json\` - Package configuration
+- TypeScript types and interfaces
+- API client implementations
+- React hooks and utilities
 `;
 
         return {
@@ -99,7 +85,7 @@ For more detailed documentation, use the MCP tools to explore the source code:
         };
       } catch (error) {
         return {
-          content: `Error generating installation guide: ${error instanceof Error ? error.message : String(error)
+          content: `Error generating guide: ${error instanceof Error ? error.message : String(error)
             }`,
           contentType: "text/plain",
         };
