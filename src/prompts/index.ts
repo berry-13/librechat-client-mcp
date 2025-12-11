@@ -11,37 +11,47 @@
 export const prompts = {
   "explore-librechat-client": {
     name: "explore-librechat-client",
-    description: "Explore the LibreChat Client package structure and available APIs",
+    description: "Explore the LibreChat Client package structure and available modules",
     arguments: [
       {
         name: "focus",
-        description: "Area to focus on (api, types, hooks, utils, all)",
+        description: "Area to focus on (hooks, components, providers, utils, store, all)",
       },
     ],
   },
-  "understand-api-endpoint": {
-    name: "understand-api-endpoint",
-    description: "Understand how to use a specific LibreChat API endpoint",
+  "explore-hooks": {
+    name: "explore-hooks",
+    description: "Discover and understand available React hooks in LibreChat Client",
+    arguments: [],
+  },
+  "explore-components": {
+    name: "explore-components",
+    description: "Browse and understand React components in LibreChat Client",
     arguments: [
       {
-        name: "endpoint",
-        description: "The API endpoint to understand (e.g., 'messages', 'conversations', 'users')",
-        required: true,
+        name: "category",
+        description: "Component category to explore (e.g., 'Chat', 'Nav', 'ui')",
       },
     ],
   },
-  "implement-librechat-feature": {
-    name: "implement-librechat-feature",
+  "explore-providers": {
+    name: "explore-providers",
+    description: "Understand Context providers and global state management",
+    arguments: [],
+  },
+  "understand-state-management": {
+    name: "understand-state-management",
+    description: "Learn about state management patterns in LibreChat Client",
+    arguments: [],
+  },
+  "implement-feature": {
+    name: "implement-feature",
     description: "Get guidance on implementing a feature using LibreChat Client",
     arguments: [
       {
         name: "feature",
-        description: "The feature to implement (e.g., 'send-message', 'list-conversations', 'authentication')",
+        description: "The feature to implement (e.g., 'chat-interface', 'message-list', 'auth-flow')",
         required: true,
-      },
-      {
-        name: "framework",
-        description: "Target framework (react, vue, vanilla-js)",
       },
     ],
   },
@@ -65,32 +75,90 @@ export const promptHandlers = {
             type: "text",
             text: `Explore the LibreChat Client package with focus on: ${focus}
 
-INSTRUCTIONS:
-1. Use the MCP tools to explore the package structure:
-   - Use 'get_directory_structure' to see the overall layout
-   - Use 'list_files' to see files in specific directories
-   - Use 'get_source_file' to read specific implementation files
+## INSTRUCTIONS
 
-2. Focus areas:
-   ${focus === "api" || focus === "all" ? "- API layer: How API calls are structured and made" : ""}
-   ${focus === "types" || focus === "all" ? "- Types: TypeScript interfaces and type definitions" : ""}
-   ${focus === "hooks" || focus === "all" ? "- Hooks: React hooks for state management and API integration" : ""}
-   ${focus === "utils" || focus === "all" ? "- Utils: Utility functions and helpers" : ""}
+### Step 1: Get Package Overview
+- Use \`get_index\` to see all package exports
+- Use \`get_package_info\` to see dependencies and configuration
 
-3. Provide a summary of:
-   - Key exports and their purposes
-   - Common usage patterns
-   - Integration approaches`,
+### Step 2: Explore Specific Areas
+${focus === "hooks" || focus === "all" ? `
+**Hooks:**
+- Use \`list_hooks\` to see all available hooks
+- Use \`get_hook\` with a hook name to read its implementation
+- Look for patterns like useConversation, useAuth, useMessages` : ""}
+${focus === "components" || focus === "all" ? `
+**Components:**
+- Use \`list_components\` to see component directories
+- Use \`list_components\` with subdir to explore nested components
+- Use \`get_component\` to read specific component source` : ""}
+${focus === "providers" || focus === "all" ? `
+**Providers:**
+- Use \`list_providers\` to see context providers
+- Use \`get_provider\` to read provider implementations
+- Understand how global state is managed` : ""}
+${focus === "utils" || focus === "all" ? `
+**Utils:**
+- Use \`list_utils\` to see utility functions
+- Use \`get_util\` to read specific utilities` : ""}
+${focus === "store" || focus === "all" ? `
+**State Management:**
+- Use \`get_store\` to see the state management setup` : ""}
+
+### Step 3: Summarize
+Provide a clear summary of:
+- Main exports and their purposes
+- Key patterns and conventions used
+- How different modules interact`,
           },
         },
       ],
     };
   },
 
-  "understand-api-endpoint": ({
-    endpoint,
+  "explore-hooks": () => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Explore React hooks in the LibreChat Client package.
+
+## INSTRUCTIONS
+
+### Step 1: List All Hooks
+Use \`list_hooks\` to get a complete list of available hooks.
+
+### Step 2: Analyze Key Hooks
+For important hooks, use \`get_hook\` to read their source code and understand:
+- What state they manage
+- What API calls they make
+- What values and functions they return
+- How they handle loading/error states
+
+### Step 3: Identify Patterns
+Look for:
+- Custom hooks for API integration
+- State management hooks
+- UI interaction hooks
+- Authentication hooks
+
+### Step 4: Provide Summary
+Create a guide showing:
+- Available hooks grouped by purpose
+- When to use each hook
+- Example usage patterns`,
+          },
+        },
+      ],
+    };
+  },
+
+  "explore-components": ({
+    category,
   }: {
-    endpoint: string;
+    category?: string;
   }) => {
     return {
       messages: [
@@ -98,34 +166,123 @@ INSTRUCTIONS:
           role: "user",
           content: {
             type: "text",
-            text: `Help me understand the ${endpoint} API endpoint in LibreChat Client.
+            text: `Explore React components in the LibreChat Client package${category ? ` focusing on: ${category}` : ""}.
 
-INSTRUCTIONS:
-1. Use the MCP tools to find relevant source files:
-   - Look for files related to '${endpoint}' in the api directory
-   - Find TypeScript types for request/response payloads
-   - Locate any hooks that wrap this endpoint
+## INSTRUCTIONS
 
-2. Explain:
-   - Request/response format
-   - Required and optional parameters
-   - Authentication requirements
-   - Error handling patterns
-   - Example usage code
+### Step 1: Browse Component Structure
+${category
+  ? `Use \`list_components\` with subdir "${category}" to see components in that category.`
+  : `Use \`list_components\` to see the top-level component directories.`}
 
-3. Provide working code examples for calling this endpoint.`,
+### Step 2: Explore Components
+- Navigate into subdirectories using \`list_components\` with the subdir parameter
+- Use \`get_component\` to read specific component source code
+- Look for index files that export multiple components
+
+### Step 3: Understand Component Patterns
+For each important component, identify:
+- Props interface and types
+- State management approach
+- Styling patterns (Tailwind, CSS modules, etc.)
+- How it integrates with hooks and providers
+
+### Step 4: Document Findings
+Provide:
+- Component hierarchy and organization
+- Key components and their purposes
+- Reusable patterns
+- How to compose components together`,
           },
         },
       ],
     };
   },
 
-  "implement-librechat-feature": ({
+  "explore-providers": () => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Explore Context providers in the LibreChat Client package.
+
+## INSTRUCTIONS
+
+### Step 1: List All Providers
+Use \`list_providers\` to see available context providers.
+
+### Step 2: Analyze Each Provider
+For each provider, use \`get_provider\` to understand:
+- What state it manages
+- What context values it provides
+- How it initializes and updates state
+- Dependencies on other providers
+
+### Step 3: Understand Provider Hierarchy
+- Look at the main index or App component to see provider nesting
+- Identify which providers depend on others
+- Map out the context structure
+
+### Step 4: Document
+Provide:
+- List of providers with descriptions
+- Provider hierarchy diagram
+- How to consume each context
+- Best practices for using the providers`,
+          },
+        },
+      ],
+    };
+  },
+
+  "understand-state-management": () => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Understand state management in the LibreChat Client package.
+
+## INSTRUCTIONS
+
+### Step 1: Explore Store Configuration
+Use \`get_store\` to read the main store configuration.
+
+### Step 2: Examine Related Files
+- Use \`list_files\` with "packages/client/src" to find state-related files
+- Look for atoms, selectors, or store slices
+- Check the common directory for shared types
+
+### Step 3: Understand the Pattern
+Identify:
+- State management library used (Zustand, Jotai, Redux, etc.)
+- How state is organized (global vs local)
+- How components access state
+- How state updates are handled
+
+### Step 4: Connect with Hooks
+- Use \`list_hooks\` and examine hooks that interact with state
+- Understand how hooks abstract state access
+
+### Step 5: Document
+Provide:
+- State management architecture overview
+- Key stores/atoms and their purposes
+- How to read and update state
+- Best practices and patterns`,
+          },
+        },
+      ],
+    };
+  },
+
+  "implement-feature": ({
     feature,
-    framework = "react",
   }: {
     feature: string;
-    framework?: string;
   }) => {
     return {
       messages: [
@@ -133,25 +290,36 @@ INSTRUCTIONS:
           role: "user",
           content: {
             type: "text",
-            text: `Help me implement the "${feature}" feature using LibreChat Client in ${framework}.
+            text: `Help implement the "${feature}" feature using LibreChat Client.
 
-INSTRUCTIONS:
-1. First, explore the relevant parts of LibreChat Client:
-   - Use 'get_directory_structure' to understand the package layout
-   - Use 'get_source_file' to read the relevant API implementations
-   - Find related types and hooks
+## INSTRUCTIONS
 
-2. Implementation guidance for ${framework}:
-   ${framework === "react" ? "- Use React hooks provided by the package\n   - Implement proper state management\n   - Handle loading and error states" : ""}
-   ${framework === "vue" ? "- Use Vue Composition API patterns\n   - Implement reactive state\n   - Handle async operations properly" : ""}
-   ${framework === "vanilla-js" ? "- Use the raw API client\n   - Handle promises and async/await\n   - Implement error handling" : ""}
+### Step 1: Understand the Package
+- Use \`get_index\` to see available exports
+- Use \`get_package_info\` to understand dependencies
 
-3. Provide:
-   - Complete implementation code
-   - Type-safe usage
-   - Error handling
-   - Loading states (if applicable)
-   - Example usage`,
+### Step 2: Find Relevant Code
+Based on "${feature}", explore:
+- Use \`list_hooks\` and \`get_hook\` for relevant hooks
+- Use \`list_components\` and \`get_component\` for UI components
+- Use \`list_providers\` and \`get_provider\` for state management
+- Use \`list_utils\` and \`get_util\` for helper functions
+
+### Step 3: Analyze Patterns
+Look at existing implementations to understand:
+- How similar features are built
+- Component composition patterns
+- State management approach
+- Error handling patterns
+
+### Step 4: Provide Implementation Guide
+Create a guide that includes:
+- Required imports from LibreChat Client
+- Component structure
+- Hook usage
+- State management integration
+- Complete code examples
+- Best practices and tips`,
           },
         },
       ],

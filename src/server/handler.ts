@@ -75,57 +75,14 @@ export const setupHandlers = (server: Server): void => {
     );
   });
 
-  // List available tools
+  // List available tools - dynamically from tools/index.ts
   server.setRequestHandler(ListToolsRequestSchema, async (request) => {
     return await handleRequest(
       'list_tools',
       request.params,
       async () => {
-        // Return the tools that are registered with the server
-        const registeredTools = [
-          {
-            name: 'get_source_file',
-            description: 'Get the source code for a specific file in the LibreChat Client package',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                filePath: {
-                  type: 'string',
-                  description: 'Path to the source file within the LibreChat Client package (e.g., "src/api/index.ts")',
-                },
-              },
-              required: ['filePath'],
-            },
-          },
-          {
-            name: 'list_files',
-            description: 'List files in a directory within the LibreChat Client package',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                directory: {
-                  type: 'string',
-                  description: 'Directory path within the LibreChat Client package (optional, defaults to root)',
-                },
-              },
-            },
-          },
-          {
-            name: 'get_directory_structure',
-            description: 'Get the directory structure of the LibreChat Client repository',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                path: {
-                  type: 'string',
-                  description: 'Path within the LibreChat Client repository (optional, defaults to package root)',
-                },
-              },
-            },
-          },
-        ];
-
-        return { tools: registeredTools };
+        // Return all tools registered in the tools index
+        return { tools: Object.values(tools) };
       }
     );
   });

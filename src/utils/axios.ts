@@ -217,6 +217,155 @@ async function getGitHubRateLimit(): Promise<any> {
     }
 }
 
+/**
+ * LibreChat Client specific paths
+ */
+const CLIENT_PATHS = {
+    HOOKS: `${DEFAULT_PATH}/src/hooks`,
+    COMPONENTS: `${DEFAULT_PATH}/src/components`,
+    PROVIDERS: `${DEFAULT_PATH}/src/Providers`,
+    UTILS: `${DEFAULT_PATH}/src/utils`,
+    COMMON: `${DEFAULT_PATH}/src/common`,
+    THEME: `${DEFAULT_PATH}/src/theme`,
+    LOCALES: `${DEFAULT_PATH}/src/locales`,
+    SVGS: `${DEFAULT_PATH}/src/svgs`,
+    SRC: `${DEFAULT_PATH}/src`,
+};
+
+/**
+ * Get a hook file from the hooks directory
+ * @param hookName Name of the hook (with or without .ts/.tsx extension)
+ * @returns Promise with hook source code
+ */
+async function getHook(hookName: string): Promise<string> {
+    // Normalize hook name
+    let normalizedName = hookName;
+    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
+        // Try .ts first, then .tsx
+        try {
+            return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}.ts`);
+        } catch {
+            return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}.tsx`);
+        }
+    }
+    return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}`);
+}
+
+/**
+ * List all hooks in the hooks directory
+ * @returns Promise with list of hook files
+ */
+async function listHooks(): Promise<any[]> {
+    return await listFiles(CLIENT_PATHS.HOOKS);
+}
+
+/**
+ * Get a component file from the components directory
+ * @param componentPath Path to the component (can be nested like "Chat/Input.tsx")
+ * @returns Promise with component source code
+ */
+async function getComponent(componentPath: string): Promise<string> {
+    let normalizedPath = componentPath;
+    if (!normalizedPath.endsWith('.ts') && !normalizedPath.endsWith('.tsx')) {
+        // Try .tsx first for components, then .ts
+        try {
+            return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}.tsx`);
+        } catch {
+            return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}.ts`);
+        }
+    }
+    return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}`);
+}
+
+/**
+ * List components in the components directory
+ * @param subdir Optional subdirectory within components
+ * @returns Promise with list of component files/directories
+ */
+async function listComponents(subdir?: string): Promise<any[]> {
+    const path = subdir ? `${CLIENT_PATHS.COMPONENTS}/${subdir}` : CLIENT_PATHS.COMPONENTS;
+    return await listFiles(path);
+}
+
+/**
+ * Get a provider file from the Providers directory
+ * @param providerName Name of the provider
+ * @returns Promise with provider source code
+ */
+async function getProvider(providerName: string): Promise<string> {
+    let normalizedName = providerName;
+    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
+        try {
+            return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}.tsx`);
+        } catch {
+            return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}.ts`);
+        }
+    }
+    return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}`);
+}
+
+/**
+ * List all providers
+ * @returns Promise with list of provider files
+ */
+async function listProviders(): Promise<any[]> {
+    return await listFiles(CLIENT_PATHS.PROVIDERS);
+}
+
+/**
+ * Get a utility file from the utils directory
+ * @param utilName Name of the utility file
+ * @returns Promise with utility source code
+ */
+async function getUtil(utilName: string): Promise<string> {
+    let normalizedName = utilName;
+    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
+        try {
+            return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}.ts`);
+        } catch {
+            return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}.tsx`);
+        }
+    }
+    return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}`);
+}
+
+/**
+ * List all utility files
+ * @returns Promise with list of utility files
+ */
+async function listUtils(): Promise<any[]> {
+    return await listFiles(CLIENT_PATHS.UTILS);
+}
+
+/**
+ * Get the package.json for the client package
+ * @returns Promise with package.json content
+ */
+async function getPackageInfo(): Promise<any> {
+    const content = await getSourceFile(`${DEFAULT_PATH}/package.json`);
+    try {
+        return JSON.parse(content);
+    } catch {
+        return { raw: content };
+    }
+}
+
+/**
+ * Get the store.ts file (state management)
+ * @returns Promise with store source code
+ */
+async function getStore(): Promise<string> {
+    return await getSourceFile(`${CLIENT_PATHS.SRC}/store.ts`);
+}
+
+/**
+ * Get the main index.ts entry point
+ * @returns Promise with index.ts source code
+ */
+async function getIndex(): Promise<string> {
+    return await getSourceFile(`${CLIENT_PATHS.SRC}/index.ts`);
+}
+
 export const axios = {
     githubRaw,
     githubApi,
@@ -225,11 +374,24 @@ export const axios = {
     buildDirectoryTree,
     setGitHubApiKey,
     getGitHubRateLimit,
+    // LibreChat specific functions
+    getHook,
+    listHooks,
+    getComponent,
+    listComponents,
+    getProvider,
+    listProviders,
+    getUtil,
+    listUtils,
+    getPackageInfo,
+    getStore,
+    getIndex,
     paths: {
         REPO_OWNER,
         REPO_NAME,
         REPO_BRANCH,
-        DEFAULT_PATH
+        DEFAULT_PATH,
+        ...CLIENT_PATHS
     }
 };
 
