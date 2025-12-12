@@ -1,527 +1,328 @@
-import { getFramework } from "../utils/framework.js"
-import {
-  getOptimizationInstructions,
-  getPageTypeSpecificInstructions,
-} from "./helpers.js"
-
-// Small helper to append React Native specific notes to prompts when needed
-function getReactNativeNotes(context: "general" | "page" | "dashboard" | "auth" | "datatable"): string {
-  const base = `\n\nREACT NATIVE NOTES:\n- Use React Native primitives (View, Text, Pressable, Image) — no DOM/HTML.\n- Style with NativeWind (className) or StyleSheet.create; avoid web CSS.\n- Prefer FlatList/SectionList for lists; implement virtualization/windowing.\n- Use accessibility props (accessibilityLabel, accessibilityRole, accessibilityHint) instead of ARIA.\n- For animations use react-native-reanimated; for gestures use react-native-gesture-handler.\n- Consider SafeAreaView and Platform checks for iOS/Android differences.`
-
-  const extras: Record<typeof context, string> = {
-    general: base,
-    page: base,
-    dashboard:
-      base +
-      `\n- Build grids with Flexbox styles; there is no CSS Grid.\n- Use RN-friendly chart libs (e.g., victory-native, react-native-svg + d3).\n- Data widgets often render as lists/cards rather than HTML tables.`,
-    auth:
-      base +
-      `\n- Use TextInput with secureTextEntry for passwords; manage keyboard overlaps with KeyboardAvoidingView.\n- Consider react-hook-form with a RN resolver or controlled inputs.\n- Deep linking/redirects for OAuth providers may require additional setup.`,
-    datatable:
-      base +
-      `\n- RN does not have native HTML tables; implement a DataTable with FlatList/FlashList.\n- Use item separators and row components; handle large datasets with virtualization.\n- For row actions, use Pressable/Swipeable patterns and action sheets.`,
-  }
-
-  return extras[context]
-}
+/**
+ * Prompts for the LibreChat Client MCP server
+ *
+ * These prompts help AI assistants understand and work with the LibreChat Client package.
+ */
 
 /**
  * List of prompts metadata available in this MCP server
  * Each prompt must have a name, description, and arguments if parameters are needed
  */
 export const prompts = {
-  "build-shadcn-page": {
-    name: "build-shadcn-page",
-    description:
-      "Generate a complete shadcn/ui page using v4 components and blocks",
+  "explore-librechat-client": {
+    name: "explore-librechat-client",
+    description: "Explore the LibreChat Client package structure and available modules",
     arguments: [
       {
-        name: "pageType",
-        description:
-          "Type of page to build (dashboard, login, calendar, sidebar, products, custom)",
-        required: true,
-      },
-      {
-        name: "features",
-        description: "Specific features or components needed (comma-separated)",
-      },
-      {
-        name: "layout",
-        description:
-          "Layout preference (sidebar, header, full-width, centered)",
-      },
-      {
-        name: "style",
-        description: "Design style (minimal, modern, enterprise, creative)",
+        name: "focus",
+        description: "Area to focus on (hooks, components, providers, utils, store, all)",
       },
     ],
   },
-  "create-dashboard": {
-    name: "create-dashboard",
-    description:
-      "Create a comprehensive dashboard using shadcn/ui v4 blocks and components",
+  "explore-hooks": {
+    name: "explore-hooks",
+    description: "Discover and understand available React hooks in LibreChat Client",
+    arguments: [],
+  },
+  "explore-components": {
+    name: "explore-components",
+    description: "Browse and understand React components in LibreChat Client",
     arguments: [
       {
-        name: "dashboardType",
-        description:
-          "Type of dashboard (analytics, admin, user, project, sales)",
-        required: true,
-      },
-      {
-        name: "widgets",
-        description:
-          "Dashboard widgets needed (charts, tables, cards, metrics)",
-      },
-      {
-        name: "navigation",
-        description: "Navigation style (sidebar, top-nav, breadcrumbs)",
+        name: "category",
+        description: "Component category to explore (e.g., 'Chat', 'Nav', 'ui')",
       },
     ],
   },
-  "create-auth-flow": {
-    name: "create-auth-flow",
-    description:
-      "Generate authentication pages using shadcn/ui v4 login blocks",
+  "explore-providers": {
+    name: "explore-providers",
+    description: "Understand Context providers and global state management",
+    arguments: [],
+  },
+  "understand-state-management": {
+    name: "understand-state-management",
+    description: "Learn about state management patterns in LibreChat Client",
+    arguments: [],
+  },
+  "implement-feature": {
+    name: "implement-feature",
+    description: "Get guidance on implementing a feature using LibreChat Client",
     arguments: [
       {
-        name: "authType",
-        description:
-          "Authentication type (login, register, forgot-password, two-factor)",
+        name: "feature",
+        description: "The feature to implement (e.g., 'chat-interface', 'message-list', 'auth-flow')",
         required: true,
-      },
-      {
-        name: "providers",
-        description: "Auth providers (email, google, github, apple)",
-      },
-      {
-        name: "features",
-        description:
-          "Additional features (remember-me, social-login, validation)",
       },
     ],
   },
-  "optimize-shadcn-component": {
-    name: "optimize-shadcn-component",
-    description:
-      "Optimize or enhance existing shadcn/ui components with best practices",
-    arguments: [
-      {
-        name: "component",
-        description: "Component name to optimize",
-        required: true,
-      },
-      {
-        name: "optimization",
-        description:
-          "Type of optimization (performance, accessibility, responsive, animations)",
-      },
-      {
-        name: "useCase",
-        description: "Specific use case or context for the component",
-      },
-    ],
-  },
-  "create-data-table": {
-    name: "create-data-table",
-    description: "Create advanced data tables with shadcn/ui components",
-    arguments: [
-      {
-        name: "dataType",
-        description:
-          "Type of data to display (users, products, orders, analytics)",
-        required: true,
-      },
-      {
-        name: "features",
-        description:
-          "Table features (sorting, filtering, pagination, search, selection)",
-      },
-      {
-        name: "actions",
-        description: "Row actions (edit, delete, view, custom)",
-      },
-    ],
-  },
-}
+};
 
 /**
  * Map of prompt names to their handler functions
  * Each handler generates the actual prompt content with the provided parameters
  */
 export const promptHandlers = {
-  "build-shadcn-page": ({
-    pageType,
-    features = "",
-    layout = "sidebar",
-    style = "modern",
+  "explore-librechat-client": ({
+    focus = "all",
   }: {
-    pageType: string
-    features?: string
-    layout?: string
-    style?: string
+    focus?: string;
   }) => {
-    const framework = getFramework()
-
     return {
       messages: [
         {
           role: "user",
           content: {
             type: "text",
-            text: `Create a complete ${pageType} page using shadcn/ui v4 components and blocks for ${framework}. 
+            text: `Explore the LibreChat Client package with focus on: ${focus}
 
-REQUIREMENTS:
-- Framework: ${framework}
-- Page Type: ${pageType}
-- Features: ${features || "Standard features for this page type"}
-- Layout: ${layout}
-- Design Style: ${style}
+## INSTRUCTIONS
 
-INSTRUCTIONS:
-1. Use the MCP tools to explore available v4 blocks for this page type:
-   - Use 'list_blocks' to see available categories
-   - Use 'get_block' to fetch specific block implementations
+### Step 1: Get Package Overview
+- Use \`get_index\` to see all package exports
+- Use \`get_package_info\` to see dependencies and configuration
 
-2. Build the page following these principles:
-   - Use shadcn/ui v4 components and blocks as building blocks
-   - Ensure responsive design (${framework === "react-native" ? "use NativeWind or StyleSheet" : "use Tailwind CSS classes"})
-   - Implement proper TypeScript types
-   - Follow ${framework} best practices and conventions
-   - Include proper accessibility attributes
+### Step 2: Explore Specific Areas
+${focus === "hooks" || focus === "all" ? `
+**Hooks:**
+- Use \`list_hooks\` to see all available hooks
+- Use \`get_hook\` with a hook name to read its implementation
+- Look for patterns like useConversation, useAuth, useMessages` : ""}
+${focus === "components" || focus === "all" ? `
+**Components:**
+- Use \`list_components\` to see component directories
+- Use \`list_components\` with subdir to explore nested components
+- Use \`get_component\` to read specific component source` : ""}
+${focus === "providers" || focus === "all" ? `
+**Providers:**
+- Use \`list_providers\` to see context providers
+- Use \`get_provider\` to read provider implementations
+- Understand how global state is managed` : ""}
+${focus === "utils" || focus === "all" ? `
+**Utils:**
+- Use \`list_utils\` to see utility functions
+- Use \`get_util\` to read specific utilities` : ""}
+${focus === "store" || focus === "all" ? `
+**State Management:**
+- Use \`get_store\` to see the state management setup` : ""}
 
-3. For ${pageType} pages specifically:
-   ${getPageTypeSpecificInstructions(pageType)}
-
-4. Code Structure:
-   - Create a main page component using ${framework} patterns
-   - Use sub-components for complex sections
-   - Include proper imports from shadcn/ui registry
-   - Add necessary state management with ${framework} best practices
-   - Include proper error handling
-
-5. Styling Guidelines:
-   - Use consistent spacing and typography
-   - Implement ${style} design principles
-   - Ensure dark/light mode compatibility
-   - Use shadcn/ui design tokens
-
-${getFramework() === "react-native" ? getReactNativeNotes("page") : ""}
-
-Please provide complete, production-ready ${framework} code with proper imports and TypeScript types.`,
+### Step 3: Summarize
+Provide a clear summary of:
+- Main exports and their purposes
+- Key patterns and conventions used
+- How different modules interact`,
           },
         },
       ],
-    }
+    };
   },
 
-  "create-dashboard": ({
-    dashboardType,
-    widgets = "charts,tables,cards",
-    navigation = "sidebar",
-  }: {
-    dashboardType: string
-    widgets?: string
-    navigation?: string
-  }) => {
-    const framework = getFramework()
-
+  "explore-hooks": () => {
     return {
       messages: [
         {
           role: "user",
           content: {
             type: "text",
-            text: `Create a comprehensive ${dashboardType} dashboard using shadcn/ui v4 blocks and components for ${framework}.
+            text: `Explore React hooks in the LibreChat Client package.
 
-REQUIREMENTS:
-- Framework: ${framework}
-- Dashboard Type: ${dashboardType}
-- Widgets: ${widgets}
-- Navigation: ${navigation}
+## INSTRUCTIONS
 
-INSTRUCTIONS:
-1. First, explore available dashboard blocks:
-   - Use 'list_blocks' with category="dashboard" to see available dashboard blocks
-   - Use 'get_block' to examine dashboard-01 and other dashboard implementations
-   - Study the structure and component usage
+### Step 1: List All Hooks
+Use \`list_hooks\` to get a complete list of available hooks.
 
-2. Dashboard Structure:
-   - Implement ${navigation} navigation using appropriate shadcn/ui components
-   - Create a responsive grid layout for widgets
-   - Include proper header with user menu and notifications
-   - Add breadcrumb navigation
+### Step 2: Analyze Key Hooks
+For important hooks, use \`get_hook\` to read their source code and understand:
+- What state they manage
+- What API calls they make
+- What values and functions they return
+- How they handle loading/error states
 
-3. Widgets to Include:
-   ${widgets
-     .split(",")
-     .map((widget) => `- ${widget.trim()} with real-time data simulation`)
-     .join("\n   ")}
+### Step 3: Identify Patterns
+Look for:
+- Custom hooks for API integration
+- State management hooks
+- UI interaction hooks
+- Authentication hooks
 
-4. Key Features:
-   - Responsive design that works on mobile, tablet, and desktop
-   - Interactive charts using a charting library compatible with shadcn/ui
-   - Data tables with sorting, filtering, and pagination
-   - Modal dialogs for detailed views
-   - Toast notifications for user feedback
-
-5. Data Management:
-   - Create mock data structures for ${dashboardType}
-   - Implement state management with ${framework} best practices
-   - Add loading states and error handling
-   - Include data refresh functionality
-
-6. Accessibility:
-   - Proper ARIA labels and roles
-   - Keyboard navigation support
-   - Screen reader compatibility
-   - Color contrast compliance
-
-${getFramework() === "react-native" ? getReactNativeNotes("dashboard") : ""}
-
-Provide complete ${framework} code with all necessary imports, types, and implementations.`,
+### Step 4: Provide Summary
+Create a guide showing:
+- Available hooks grouped by purpose
+- When to use each hook
+- Example usage patterns`,
           },
         },
       ],
-    }
+    };
   },
 
-  "create-auth-flow": ({
-    authType,
-    providers = "email",
-    features = "validation",
+  "explore-components": ({
+    category,
   }: {
-    authType: string
-    providers?: string
-    features?: string
+    category?: string;
   }) => {
-    const framework = getFramework()
-
     return {
       messages: [
         {
           role: "user",
           content: {
             type: "text",
-            text: `Create a complete ${authType} authentication flow using shadcn/ui v4 login blocks and components for ${framework}.
+            text: `Explore React components in the LibreChat Client package${category ? ` focusing on: ${category}` : ""}.
 
-REQUIREMENTS:
-- Framework: ${framework}
-- Auth Type: ${authType}
-- Providers: ${providers}
-- Features: ${features}
+## INSTRUCTIONS
 
-INSTRUCTIONS:
-1. Explore login blocks first:
-   - Use 'list_blocks' with category="login" to see available login blocks
-   - Use 'get_block' to examine login-01, login-02, etc. implementations
-   - Study different authentication patterns and layouts
+### Step 1: Browse Component Structure
+${category
+  ? `Use \`list_components\` with subdir "${category}" to see components in that category.`
+  : `Use \`list_components\` to see the top-level component directories.`}
 
-2. Authentication Components:
-   - Form validation using ${framework} best practices
-   - Input components with proper error states
-   - Loading states during authentication
-   - Success/error feedback with toast notifications
+### Step 2: Explore Components
+- Navigate into subdirectories using \`list_components\` with the subdir parameter
+- Use \`get_component\` to read specific component source code
+- Look for index files that export multiple components
 
-3. Providers Implementation:
-   ${providers
-     .split(",")
-     .map(
-       (provider) =>
-         `- ${provider.trim()}: Implement ${provider.trim()} authentication UI`
-     )
-     .join("\n   ")}
+### Step 3: Understand Component Patterns
+For each important component, identify:
+- Props interface and types
+- State management approach
+- Styling patterns (Tailwind, CSS modules, etc.)
+- How it integrates with hooks and providers
 
-4. Security Features:
-   - Form validation with proper error messages
-   - Password strength indicator (if applicable)
-   - CSRF protection considerations
-   - Secure form submission patterns
-
-5. UX Considerations:
-   - Smooth transitions between auth states
-   - Clear error messaging
-   - Progressive enhancement
-   - Mobile-friendly design
-   - Remember me functionality (if applicable)
-
-6. Form Features:
-   ${features
-     .split(",")
-     .map(
-       (feature) =>
-         `- ${feature.trim()}: Implement ${feature.trim()} functionality`
-     )
-     .join("\n   ")}
-
-7. Layout Options:
-   - Choose appropriate layout from available login blocks
-   - Center-aligned forms with proper spacing
-   - Background images or gradients (optional)
-   - Responsive design for all screen sizes
-
-${getFramework() === "react-native" ? getReactNativeNotes("auth") : ""}
-
-Provide complete ${framework} authentication flow code with proper TypeScript types, validation, and error handling.`,
+### Step 4: Document Findings
+Provide:
+- Component hierarchy and organization
+- Key components and their purposes
+- Reusable patterns
+- How to compose components together`,
           },
         },
       ],
-    }
+    };
   },
 
-  "optimize-shadcn-component": ({
-    component,
-    optimization = "performance",
-    useCase = "general",
-  }: {
-    component: string
-    optimization?: string
-    useCase?: string
-  }) => {
-    const framework = getFramework()
-
+  "explore-providers": () => {
     return {
       messages: [
         {
           role: "user",
           content: {
             type: "text",
-            text: `Optimize the ${component} shadcn/ui component for ${optimization} and ${useCase} use case in ${framework}.
+            text: `Explore Context providers in the LibreChat Client package.
 
-REQUIREMENTS:
-- Framework: ${framework}
-- Component: ${component}
-- Optimization Focus: ${optimization}
-- Use Case: ${useCase}
+## INSTRUCTIONS
 
-INSTRUCTIONS:
-1. First, analyze the current component:
-   - Use 'get_component' to fetch the ${component} source code
-   - Use 'get_component_demo' to see current usage examples
-   - Use 'get_component_metadata' to understand dependencies
+### Step 1: List All Providers
+Use \`list_providers\` to see available context providers.
 
-2. Optimization Strategy for ${optimization}:
-   ${getOptimizationInstructions(optimization, framework)}
+### Step 2: Analyze Each Provider
+For each provider, use \`get_provider\` to understand:
+- What state it manages
+- What context values it provides
+- How it initializes and updates state
+- Dependencies on other providers
 
-3. Use Case Specific Enhancements for ${useCase}:
-   - Analyze how ${component} is typically used in ${useCase} scenarios
-   - Identify common patterns and pain points
-   - Suggest improvements for better developer experience
+### Step 3: Understand Provider Hierarchy
+- Look at the main index or App component to see provider nesting
+- Identify which providers depend on others
+- Map out the context structure
 
-4. Implementation:
-   - Provide optimized component code
-   - Include performance benchmarks or considerations
-   - Add proper TypeScript types and interfaces
-   - Include usage examples demonstrating improvements
-
-5. Best Practices:
-   - Follow ${framework} performance best practices
-   - Implement ${framework} optimization patterns where needed
-   - Ensure backward compatibility
-   - Add comprehensive prop validation
-
-6. Testing Considerations:
-   - Suggest test cases for the optimized component
-   - Include accessibility testing recommendations
-   - Performance testing guidelines
-
-Provide the optimized ${framework} component code with detailed explanations of improvements made.`,
+### Step 4: Document
+Provide:
+- List of providers with descriptions
+- Provider hierarchy diagram
+- How to consume each context
+- Best practices for using the providers`,
           },
         },
       ],
-    }
+    };
   },
 
-  "create-data-table": ({
-    dataType,
-    features = "sorting,filtering,pagination",
-    actions = "edit,delete",
-  }: {
-    dataType: string
-    features?: string
-    actions?: string
-  }) => {
-    const framework = getFramework()
-
+  "understand-state-management": () => {
     return {
       messages: [
         {
           role: "user",
           content: {
             type: "text",
-            text: `Create an advanced data table for ${dataType} using shadcn/ui v4 components in ${framework}.
+            text: `Understand state management in the LibreChat Client package.
 
-REQUIREMENTS:
-- Framework: ${framework}
-- Data Type: ${dataType}
-- Features: ${features}
-- Actions: ${actions}
+## INSTRUCTIONS
 
-INSTRUCTIONS:
-1. Explore table components:
-   - Use 'get_component' for 'table' to see the base table implementation
-   - Use 'get_component_demo' for 'table' to see usage examples
-   - Look for any existing table blocks in the blocks directory
+### Step 1: Explore Store Configuration
+Use \`get_store\` to read the main store configuration.
 
-2. Table Structure:
-   - Create a reusable DataTable component using ${framework} patterns
-   - Define proper TypeScript interfaces for ${dataType} data
-   - Implement column definitions with proper typing
-   - Add responsive table design
+### Step 2: Examine Related Files
+- Use \`list_files\` with "packages/client/src" to find state-related files
+- Look for atoms, selectors, or store slices
+- Check the common directory for shared types
 
-3. Features Implementation:
-   ${features
-     .split(",")
-     .map((feature) => {
-       const featureInstructions: Record<string, string> = {
-         sorting:
-           "- Column sorting (ascending/descending) with visual indicators",
-         filtering: "- Global search and column-specific filters",
-         pagination: "- Page-based navigation with configurable page sizes",
-         search: "- Real-time search across all columns",
-         selection: "- Row selection with bulk actions support",
-       }
-       return (
-         featureInstructions[feature.trim()] ||
-         `- ${feature.trim()}: Implement ${feature.trim()} functionality`
-       )
-     })
-     .join("\n   ")}
+### Step 3: Understand the Pattern
+Identify:
+- State management library used (Zustand, Jotai, Redux, etc.)
+- How state is organized (global vs local)
+- How components access state
+- How state updates are handled
 
-4. Row Actions:
-   ${actions
-     .split(",")
-     .map(
-       (action) =>
-         `- ${action.trim()}: Implement ${action.trim()} action with proper confirmation dialogs`
-     )
-     .join("\n   ")}
+### Step 4: Connect with Hooks
+- Use \`list_hooks\` and examine hooks that interact with state
+- Understand how hooks abstract state access
 
-5. Data Management:
-   - Create mock data for ${dataType}
-   - Implement data fetching patterns using ${framework} best practices
-   - Add loading states and error handling
-   - Add optimistic updates for actions
-   - Include data validation
-
-6. UI/UX Features:
-   - Loading skeletons during data fetch
-   - Empty states when no data is available
-   - Error states with retry functionality
-   - Responsive design for mobile devices
-   - Keyboard navigation support
-
-7. Advanced Features:
-   - Column resizing and reordering
-   - Export functionality (CSV, JSON)
-   - Bulk operations
-   - Virtual scrolling for large datasets (if needed)
-
-${getFramework() === "react-native" ? getReactNativeNotes("datatable") : ""}
-
-Provide complete ${framework} data table implementation with proper TypeScript types, mock data, and usage examples.`,
+### Step 5: Document
+Provide:
+- State management architecture overview
+- Key stores/atoms and their purposes
+- How to read and update state
+- Best practices and patterns`,
           },
         },
       ],
-    }
+    };
   },
-}
+
+  "implement-feature": ({
+    feature,
+  }: {
+    feature: string;
+  }) => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Help implement the "${feature}" feature using LibreChat Client.
+
+## INSTRUCTIONS
+
+### Step 1: Understand the Package
+- Use \`get_index\` to see available exports
+- Use \`get_package_info\` to understand dependencies
+
+### Step 2: Find Relevant Code
+Based on "${feature}", explore:
+- Use \`list_hooks\` and \`get_hook\` for relevant hooks
+- Use \`list_components\` and \`get_component\` for UI components
+- Use \`list_providers\` and \`get_provider\` for state management
+- Use \`list_utils\` and \`get_util\` for helper functions
+
+### Step 3: Analyze Patterns
+Look at existing implementations to understand:
+- How similar features are built
+- Component composition patterns
+- State management approach
+- Error handling patterns
+
+### Step 4: Provide Implementation Guide
+Create a guide that includes:
+- Required imports from LibreChat Client
+- Component structure
+- Hook usage
+- State management integration
+- Complete code examples
+- Best practices and tips`,
+          },
+        },
+      ],
+    };
+  },
+};

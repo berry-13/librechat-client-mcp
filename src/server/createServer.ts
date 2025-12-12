@@ -4,7 +4,7 @@ import { capabilities } from "./capabilities.js"
 export function createServer(version: string) {
   return new Server(
     {
-      name: "shadcn-ui-mcp-server",
+      name: "librechat-client-mcp-server",
       version,
     },
     {
