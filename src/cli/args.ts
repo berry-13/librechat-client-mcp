@@ -27,10 +27,13 @@ export function parseArgs(argv = process.argv.slice(2)): CliOptions {
     options.mode = process.env.MCP_TRANSPORT_MODE
   }
 
-  // Parse port
+  // Parse port (Railway provides PORT env variable)
   const portIndex = argv.findIndex((arg) => arg === "--port" || arg === "-p")
   if (portIndex !== -1 && argv[portIndex + 1]) {
     options.port = argv[portIndex + 1]
+  } else if (process.env.PORT) {
+    // Railway and other PaaS platforms provide PORT
+    options.port = process.env.PORT
   } else if (process.env.MCP_PORT) {
     options.port = process.env.MCP_PORT
   }

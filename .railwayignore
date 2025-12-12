@@ -1,0 +1,38 @@
+# Dependencies (will be installed during build)
+node_modules
+
+# Debug logs
+npm-debug.log
+*.log
+logs
+
+# Git
+.git
+.gitignore
+
+# Environment files (Railway uses environment variables)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage
+coverage
+.nyc_output
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+
+# Docker files (not needed for Railway Nixpacks)
+Dockerfile
+docker-compose.yml
+nginx.conf
+.dockerignore
