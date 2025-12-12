@@ -117,7 +117,8 @@ claude mcp add --scope user --transport sse librechat-client-mcp http://localhos
 |----------|-------------|
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | GitHub token for higher rate limits |
 | `MCP_TRANSPORT_MODE` | Transport mode (stdio\|sse\|dual) |
-| `MCP_PORT` | SSE server port (default: 7424) |
+| `PORT` | Server port (used by Railway and other PaaS) |
+| `MCP_PORT` | SSE server port fallback (default: 7424) |
 | `MCP_HOST` | Host binding (default: 0.0.0.0) |
 | `MCP_CORS_ORIGINS` | CORS origins (comma-separated) |
 
@@ -140,6 +141,50 @@ npm install -g @librechat/client-mcp
 
 # Or use npx (recommended)
 npx @librechat/client-mcp
+```
+
+## Deployment
+
+### Railway Deployment
+
+Deploy to Railway with one click:
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/librechat-client-mcp)
+
+Or deploy manually:
+
+1. **Create a new project** on [Railway](https://railway.app)
+2. **Connect your GitHub repository**
+3. **Configure environment variables**:
+   ```
+   GITHUB_PERSONAL_ACCESS_TOKEN=ghp_your_token_here (optional, for higher rate limits)
+   MCP_CORS_ORIGINS=* (or specific origins)
+   ```
+4. Railway will automatically:
+   - Detect Node.js project
+   - Install dependencies
+   - Build TypeScript
+   - Start the server in SSE mode
+
+**Note**: Railway automatically provides the `PORT` environment variable. The server will bind to `0.0.0.0` and listen on the assigned port.
+
+#### Railway Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PORT` | Auto | Automatically set by Railway |
+| `GITHUB_PERSONAL_ACCESS_TOKEN` | No | GitHub token for higher rate limits (5000/hour vs 60/hour) |
+| `MCP_CORS_ORIGINS` | No | Allowed CORS origins (comma-separated, or `*` for all) |
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker
+docker build -t librechat-client-mcp .
+docker run -p 7423:7423 librechat-client-mcp
+
+# Or use docker-compose
+docker-compose up -d
 ```
 
 ## Development

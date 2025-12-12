@@ -17,6 +17,7 @@
     "clean": "node -e \"const fs=require('fs');if(fs.existsSync('build'))fs.rmSync('build',{recursive:true,force:true})\"",
     "prepublishOnly": "npm run clean && npm run build",
     "start": "node build/index.js",
+    "start:railway": "node build/index.js --mode sse --host 0.0.0.0",
     "dev": "tsc && node build/index.js"
   },
   "keywords": [

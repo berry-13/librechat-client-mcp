@@ -27,13 +27,14 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R mcpserver:nodejs /app
 USER mcpserver
 
-# Expose port for SSE transport
-EXPOSE 7423
+# Expose port for SSE transport (Railway provides PORT dynamically)
+EXPOSE ${PORT:-7423}
 
-# Add health check
+# Add health check (uses PORT env variable)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "const http = require('http'); \
-    const options = { hostname: 'localhost', port: 7423, path: '/health', method: 'GET' }; \
+    const port = process.env.PORT || 7423; \
+    const options = { hostname: 'localhost', port: port, path: '/health', method: 'GET' }; \
     const req = http.request(options, (res) => { \
       if (res.statusCode === 200) process.exit(0); \
       else process.exit(1); \
@@ -42,9 +43,10 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     req.end();"
 
 # Default to SSE mode for containerized deployment
+# Railway injects PORT automatically, MCP_PORT is fallback for other platforms
 ENV MCP_TRANSPORT_MODE=sse
 ENV MCP_HOST=0.0.0.0
-ENV MCP_PORT=7423
+ENV NODE_ENV=production
 
-# Start the server
-CMD ["npm", "start", "--", "--mode", "sse", "--host", "0.0.0.0", "--port", "7423"]
+# Start the server (PORT will be injected by Railway, falls back to MCP_PORT)
+CMD ["node", "build/index.js", "--mode", "sse", "--host", "0.0.0.0"]
