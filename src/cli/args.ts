@@ -39,7 +39,7 @@ export function parseArgs(argv = process.argv.slice(2)): CliOptions {
   }
 
   // Parse host
-  const hostIndex = argv.findIndex((arg) => arg === "--host" || arg === "-h")
+  const hostIndex = argv.findIndex((arg) => arg === "--host" || arg === "-H")
   if (hostIndex !== -1 && argv[hostIndex + 1]) {
     options.host = argv[hostIndex + 1]
   } else if (process.env.MCP_HOST) {

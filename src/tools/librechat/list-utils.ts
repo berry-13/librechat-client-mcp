@@ -1,17 +1,9 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleListUtils() {
-  try {
-    const axios = await getAxiosImplementation();
-    const utils = await axios.listUtils();
-    return {
-      content: [{ type: "text", text: JSON.stringify(utils, null, 2) }]
-    };
-  } catch (error) {
-    logError('Failed to list utils', error);
-    throw new Error(`Failed to list utils: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleListUtils = createToolHandler(
+  () => axios.listUtils(),
+  'Failed to list utils'
+);
 
 export const schema = {};

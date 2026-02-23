@@ -1,23 +1,23 @@
-# Use Node.js 18 Alpine as base image
-FROM node:18-alpine
+# Build stage
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci && npm cache clean --force
-
-# Copy source code
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Remove dev dependencies after build
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
+
+COPY --from=builder /app/build ./build
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -28,12 +28,12 @@ RUN chown -R mcpserver:nodejs /app
 USER mcpserver
 
 # Expose port for SSE transport (Railway provides PORT dynamically)
-EXPOSE ${PORT:-7423}
+EXPOSE ${PORT:-7424}
 
 # Add health check (uses PORT env variable)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "const http = require('http'); \
-    const port = process.env.PORT || 7423; \
+    const port = process.env.PORT || 7424; \
     const options = { hostname: 'localhost', port: port, path: '/health', method: 'GET' }; \
     const req = http.request(options, (res) => { \
       if (res.statusCode === 200) process.exit(0); \

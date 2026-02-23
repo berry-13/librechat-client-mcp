@@ -171,12 +171,7 @@ export const setupHandlers = (server: Server): void => {
           throw new Error(`Tool not found: ${name}`);
         }
 
-        // Execute handler with circuit breaker protection
-        const result = await circuitBreakers.external.execute(() =>
-          Promise.resolve(handler(params || {}))
-        );
-
-        return result;
+        return await Promise.resolve(handler(params || {}));
       }
     );
   });

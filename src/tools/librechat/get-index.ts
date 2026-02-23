@@ -1,17 +1,9 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetIndex() {
-  try {
-    const axios = await getAxiosImplementation();
-    const sourceCode = await axios.getIndex();
-    return {
-      content: [{ type: "text", text: sourceCode }]
-    };
-  } catch (error) {
-    logError('Failed to get index', error);
-    throw new Error(`Failed to get index: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetIndex = createToolHandler(
+  () => axios.getIndex(),
+  'Failed to get index'
+);
 
 export const schema = {};

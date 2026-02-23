@@ -12,5 +12,5 @@ jobs:
     - uses: actions/first-interaction@v1
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Thanks for opening the issue,the contributors will soon look into it"
-        pr-message: "Thanks for the pr,it's now under review"
+        issue-message: "Thanks for opening this issue! A maintainer will review it shortly."
+        pr-message: "Thanks for your contribution! Your PR is now under review."

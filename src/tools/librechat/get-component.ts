@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetComponent({ componentPath }: { componentPath: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const sourceCode = await axios.getComponent(componentPath);
-    return {
-      content: [{ type: "text", text: sourceCode }]
-    };
-  } catch (error) {
-    logError(`Failed to get component "${componentPath}"`, error);
-    throw new Error(`Failed to get component "${componentPath}": ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetComponent = createToolHandler(
+  ({ componentPath }: { componentPath: string }) => axios.getComponent(componentPath),
+  'Failed to get component'
+);
 
 export const schema = {
   componentPath: {

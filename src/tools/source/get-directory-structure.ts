@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetDirectoryStructure({ path }: { path?: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const structure = await axios.buildDirectoryTree(path);
-    return {
-      content: [{ type: "text", text: JSON.stringify(structure, null, 2) }]
-    };
-  } catch (error) {
-    logError(`Failed to get directory structure for "${path || 'root'}"`, error);
-    throw new Error(`Failed to get directory structure: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetDirectoryStructure = createToolHandler(
+  ({ path }: { path?: string }) => axios.buildDirectoryTree(path),
+  'Failed to get directory structure'
+);
 
 export const schema = {
   path: {

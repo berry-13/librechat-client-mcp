@@ -3,6 +3,9 @@ import cors from "cors"
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { logInfo, logError, logWarning } from "../utils/logger.js"
+import { createServer } from './createServer.js'
+import { setupHandlers } from './handler.js'
+import { readVersion } from './version.js'
 
 export interface SSETransportOptions {
   port?: number
@@ -16,6 +19,7 @@ export class SSETransportManager {
   private server: any
   private transports: Map<string, SSEServerTransport> = new Map()
   private mcpServer?: Server
+  private cachedVersion?: string
 
   constructor(private options: SSETransportOptions = {}) {
     this.app = express()
@@ -71,12 +75,10 @@ export class SSETransportManager {
         logInfo(`SSE connection established: ${connectionId}`)
 
         // Create a new server instance for each connection to avoid conflicts
-        const { createServer } = await import('./createServer.js')
-        const { setupHandlers } = await import('./handler.js')
-        const { readVersion } = await import('./version.js')
-
-        const version = await readVersion("1.0.3")
-        const connectionServer = createServer(version)
+        if (!this.cachedVersion) {
+          this.cachedVersion = await readVersion("1.0.3")
+        }
+        const connectionServer = createServer(this.cachedVersion)
         setupHandlers(connectionServer)
 
         // Connect the new server instance to this transport
@@ -150,7 +152,7 @@ export class SSETransportManager {
   }
 
   async start(): Promise<void> {
-    const port = this.options.port || 7423
+    const port = this.options.port || 7424
     const host = this.options.host || '0.0.0.0'
 
     return new Promise((resolve, reject) => {

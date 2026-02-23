@@ -125,9 +125,8 @@ export class CircuitBreaker {
 }
 
 /**
- * Circuit breaker instances for different services
+ * Circuit breaker instance for external API calls
  */
 export const circuitBreakers = {
-  github: new CircuitBreaker({ failureThreshold: 3, timeout: 30000 }),
   external: new CircuitBreaker({ failureThreshold: 5, timeout: 60000 })
-}; 
+};

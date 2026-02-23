@@ -1,12 +1,12 @@
-# Contributing to Shadcn UI MCP Server
+# Contributing to LibreChat Client MCP
 
-Thank you for your interest in contributing! 🎉
+Thank you for your interest in contributing!
 
-We welcome contributions of all kinds—bug reports, feature requests, code, tests, and documentation. Please read these guidelines to help us maintain a collaborative and productive environment.
+We welcome contributions of all kinds -- bug reports, feature requests, code, tests, and documentation. Please read these guidelines to help us maintain a collaborative and productive environment.
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 - [How to Contribute](#how-to-contribute)
 - [Development Setup](#development-setup)
 - [Coding Standards](#coding-standards)
@@ -19,7 +19,7 @@ We welcome contributions of all kinds—bug reports, feature requests, code, tes
 ## How to Contribute
 
 ### 1. Reporting Issues
-- Use [GitHub Issues](https://github.com/Jpisnice/shadcn-ui-mcp-server/issues) for bugs, feature requests, or questions.
+- Use [GitHub Issues](https://github.com/berry-13/librechat-client-mcp/issues) for bugs, feature requests, or questions.
 - Please include:
   - A clear, descriptive title
   - Steps to reproduce (for bugs)
@@ -55,19 +55,19 @@ We welcome contributions of all kinds—bug reports, feature requests, code, tes
    ```bash
    npm run build
    ```
-3. **Run tests**
+3. **Run linting**
    ```bash
-   npm test
+   npm run lint
    ```
 4. **Start the server locally**
    ```bash
-   npx @jpisnice/shadcn-ui-mcp-server --help
+   npx @librechat/client-mcp --help
    ```
 
 ---
 
 ## Coding Standards
-- Use [Prettier](https://prettier.io/) and [ESLint](https://eslint.org/) for formatting and linting.
+- Use Prettier and ESLint for formatting and linting.
 - Write clear, concise comments and documentation.
 - Keep functions and files focused and modular.
 - Add or update tests for new features or bug fixes.
@@ -78,11 +78,10 @@ We welcome contributions of all kinds—bug reports, feature requests, code, tes
 ## Commit Messages
 - Use clear, descriptive commit messages.
 - Recommended format:
-  - `Fix: short description of the fix`
-  - `Add: new feature description`
-  - `Update: what was updated`
-  - `Refactor: what was refactored`
-  - `Docs: documentation changes`
+  - `fix: short description of the fix`
+  - `feat: new feature description`
+  - `refactor: what was refactored`
+  - `docs: documentation changes`
 - Reference issues or PRs when relevant (e.g., `Fixes #123`).
 
 ---
@@ -98,7 +97,3 @@ For details, see the [Contributor Covenant](https://www.contributor-covenant.org
 ## License
 
 By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
-
----
-
-Thank you for helping make this project better! 🙏 

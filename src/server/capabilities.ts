@@ -1,186 +1,255 @@
 export const capabilities = {
   resources: {
-    get_components: {
+    get_modules: {
       description:
-        "List of available shadcn/ui components that can be used in the project",
-      uri: "resource:get_components",
-      contentType: "text/plain",
+        "List of all modules in the LibreChat Client package with descriptions and paths",
+      uri: "resource:get_modules",
+      contentType: "application/json",
     },
-    get_install_script_for_component: {
+    get_package_structure: {
       description:
-        "Generate installation script for a specific shadcn/ui component based on package manager",
-      uriTemplate:
-        "resource-template:get_install_script_for_component?packageManager={packageManager}&component={component}",
+        "Overview of the LibreChat Client package structure and organization",
+      uri: "resource:get_package_structure",
       contentType: "text/plain",
     },
     get_installation_guide: {
       description:
-        "Get the installation guide for shadcn/ui based on build tool and package manager",
+        "Get information about the LibreChat Client package structure",
       uriTemplate:
-        "resource-template:get_installation_guide?buildTool={buildTool}&packageManager={packageManager}",
+        "resource-template:get_installation_guide",
       contentType: "text/plain",
     },
   },
   prompts: {
-    component_usage: {
-      description: "Get usage examples for a specific component",
+    "explore-librechat-client": {
+      description: "Explore the LibreChat Client package structure and available modules",
       arguments: {
-        componentName: {
+        focus: {
           type: "string",
-          description: "Name of the component to get usage for",
+          description: "Area to focus on (hooks, components, providers, utils, store, all)",
         },
       },
     },
-    component_search: {
-      description: "Search for components by name or description",
+    "explore-hooks": {
+      description: "Discover and understand available React hooks in LibreChat Client",
+    },
+    "explore-components": {
+      description: "Browse and understand React components in LibreChat Client",
       arguments: {
-        query: {
+        category: {
           type: "string",
-          description: "Search query",
+          description: "Component category to explore (e.g., 'Chat', 'Nav', 'ui')",
         },
       },
     },
-    component_comparison: {
-      description: "Compare two components side by side",
-      arguments: {
-        component1: {
-          type: "string",
-          description: "First component name",
-        },
-        component2: {
-          type: "string",
-          description: "Second component name",
-        },
-      },
+    "explore-providers": {
+      description: "Understand Context providers and global state management",
     },
-    component_recommendation: {
-      description: "Get component recommendations based on use case",
-      arguments: {
-        useCase: {
-          type: "string",
-          description: "Use case description",
-        },
-      },
+    "understand-state-management": {
+      description: "Learn about state management patterns in LibreChat Client",
     },
-    component_tutorial: {
-      description: "Get a step-by-step tutorial for using a component",
+    "implement-feature": {
+      description: "Get guidance on implementing a feature using LibreChat Client",
       arguments: {
-        componentName: {
+        feature: {
           type: "string",
-          description: "Name of the component for tutorial",
+          description: "The feature to implement (e.g., 'chat-interface', 'message-list', 'auth-flow')",
         },
       },
     },
   },
   tools: {
-    get_component: {
-      description:
-        "Get the source code for a specific shadcn/ui v4 component",
+    get_source_file: {
+      description: "Get the source code for any file in the LibreChat Client package",
       inputSchema: {
         type: "object",
         properties: {
-          componentName: {
+          filePath: {
             type: "string",
-            description:
-              'Name of the shadcn/ui component (e.g., "accordion", "button")',
+            description: "Path to the source file within the LibreChat Client package",
           },
         },
-        required: ["componentName"],
+        required: ["filePath"],
       },
     },
-    get_component_demo: {
-      description:
-        "Get demo code illustrating how a shadcn/ui v4 component should be used",
+    list_files: {
+      description: "List files in a directory within the LibreChat monorepo",
       inputSchema: {
         type: "object",
         properties: {
-          componentName: {
+          directory: {
             type: "string",
-            description:
-              'Name of the shadcn/ui component (e.g., "accordion", "button")',
+            description: "Directory path within the repository",
           },
         },
-        required: ["componentName"],
-      },
-    },
-    list_components: {
-      description: "Get all available shadcn/ui v4 components",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-    get_component_metadata: {
-      description: "Get metadata for a specific shadcn/ui v4 component",
-      inputSchema: {
-        type: "object",
-        properties: {
-          componentName: {
-            type: "string",
-            description:
-              'Name of the shadcn/ui component (e.g., "accordion", "button")',
-          },
-        },
-        required: ["componentName"],
       },
     },
     get_directory_structure: {
-      description:
-        "Get the directory structure of the shadcn-ui v4 repository",
+      description: "Get the full directory tree structure of the LibreChat Client package",
       inputSchema: {
         type: "object",
         properties: {
           path: {
             type: "string",
-            description: "Path within the repository (default: v4 registry)",
-          },
-          owner: {
-            type: "string",
-            description: 'Repository owner (default: "shadcn-ui")',
-          },
-          repo: {
-            type: "string",
-            description: 'Repository name (default: "ui")',
-          },
-          branch: {
-            type: "string",
-            description: 'Branch name (default: "main")',
+            description: "Path within the repository",
           },
         },
       },
     },
-    get_block: {
-      description:
-        "Get source code for a specific shadcn/ui v4 block (e.g., calendar-01, dashboard-01)",
+    get_hook: {
+      description: "Get the source code of a React hook from src/hooks/",
       inputSchema: {
         type: "object",
         properties: {
-          blockName: {
+          hookName: {
             type: "string",
-            description:
-              'Name of the block (e.g., "calendar-01", "dashboard-01", "login-02")',
-          },
-          includeComponents: {
-            type: "boolean",
-            description:
-              "Whether to include component files for complex blocks (default: true)",
+            description: "Name of the hook file (e.g., 'useConversation', 'useAuth')",
           },
         },
-        required: ["blockName"],
+        required: ["hookName"],
       },
     },
-    list_blocks: {
-      description:
-        "Get all available shadcn/ui v4 blocks with categorization",
+    list_hooks: {
+      description: "List all available React hooks in the LibreChat Client package",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_component: {
+      description: "Get the source code of a React component",
       inputSchema: {
         type: "object",
         properties: {
-          category: {
+          componentPath: {
             type: "string",
-            description:
-              "Filter by category (calendar, dashboard, login, sidebar, products)",
+            description: "Path to the component within src/components/",
           },
         },
+        required: ["componentPath"],
+      },
+    },
+    list_components: {
+      description: "List component files/directories",
+      inputSchema: {
+        type: "object",
+        properties: {
+          subdir: {
+            type: "string",
+            description: "Subdirectory within components to list",
+          },
+        },
+      },
+    },
+    get_provider: {
+      description: "Get the source code of a React context provider",
+      inputSchema: {
+        type: "object",
+        properties: {
+          providerName: {
+            type: "string",
+            description: "Name of the provider",
+          },
+        },
+        required: ["providerName"],
+      },
+    },
+    list_providers: {
+      description: "List all context providers in the LibreChat Client package",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_util: {
+      description: "Get the source code of a utility function from src/utils/",
+      inputSchema: {
+        type: "object",
+        properties: {
+          utilName: {
+            type: "string",
+            description: "Name of the utility file",
+          },
+        },
+        required: ["utilName"],
+      },
+    },
+    list_utils: {
+      description: "List all utility files in the LibreChat Client package",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_package_info: {
+      description: "Get the package.json of the LibreChat Client package",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_store: {
+      description: "Get the store.ts file containing state management configuration",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_index: {
+      description: "Get the main index.ts entry point showing all package exports",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    get_rate_limit: {
+      description: "Get the current GitHub API rate limit status",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    clear_cache: {
+      description: "Clear the server cache. Optionally specify a prefix to clear only matching entries.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          prefix: {
+            type: "string",
+            description: "Optional cache key prefix to clear (e.g., \"file:\" for files, \"dir:\" for directories). Omit to clear entire cache.",
+          },
+        },
+      },
+    },
+    search_code: {
+      description: "Search for code in the LibreChat Client package using GitHub Code Search API",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Search query string (e.g., \"useEffect\", \"interface ChatMessage\")",
+          },
+          extension: {
+            type: "string",
+            description: "Optional file extension filter (e.g., \"ts\", \"tsx\", \"json\")",
+          },
+        },
+        required: ["query"],
+      },
+    },
+    get_source_files: {
+      description: "Fetch multiple source files in parallel. Returns results keyed by file path with individual success/failure status.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          filePaths: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of file paths to fetch",
+          },
+        },
+        required: ["filePaths"],
       },
     },
   },

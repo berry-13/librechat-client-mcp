@@ -19,18 +19,27 @@ export async function start() {
       logWarning("No GitHub API key provided. Rate limited to 60 requests/hour.")
     }
 
-    const version = await readVersion("0.1.0")
+    const version = await readVersion("1.0.3")
     const server = createServer(version)
 
     setupHandlers(server)
 
+    const parsedPort = port ? parseInt(port) : 7424
+    const parsedHost = host || '0.0.0.0'
+    const parsedCors = cors ? cors.split(',') : true
+
     const transportManager = new TransportManager({
       mode: mode as TransportMode,
       sse: {
-        port: port ? parseInt(port) : 7424,
-        host: host || '0.0.0.0',
-        corsOrigin: cors ? cors.split(',') : true,
+        port: parsedPort,
+        host: parsedHost,
+        corsOrigin: parsedCors,
         path: '/sse'
+      },
+      http: {
+        port: parsedPort,
+        host: parsedHost,
+        corsOrigin: parsedCors,
       }
     })
 
@@ -40,7 +49,11 @@ export async function start() {
     logInfo(`Server started successfully - Mode: ${status.mode}`)
 
     if (status.sse.active) {
-      logInfo(`SSE endpoint: http://${host || '0.0.0.0'}:${port || 7424}/sse`)
+      logInfo(`SSE endpoint: http://${parsedHost}:${parsedPort}/sse`)
+    }
+
+    if (status.http.active) {
+      logInfo(`Streamable HTTP endpoint: http://${parsedHost}:${parsedPort}/mcp`)
     }
 
     process.on('SIGINT', async () => {

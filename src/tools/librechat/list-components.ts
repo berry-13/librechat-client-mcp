@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleListComponents({ subdir }: { subdir?: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const components = await axios.listComponents(subdir);
-    return {
-      content: [{ type: "text", text: JSON.stringify(components, null, 2) }]
-    };
-  } catch (error) {
-    logError(`Failed to list components${subdir ? ` in ${subdir}` : ''}`, error);
-    throw new Error(`Failed to list components: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleListComponents = createToolHandler(
+  ({ subdir }: { subdir?: string }) => axios.listComponents(subdir),
+  'Failed to list components'
+);
 
 export const schema = {
   subdir: {

@@ -6,6 +6,14 @@ import { handleGetDirectoryStructure } from './source/get-directory-structure.js
 import { schema as getSourceFileSchema } from './source/get-source-file.js';
 import { schema as listFilesSchema } from './source/list-files.js';
 import { schema as getDirectoryStructureSchema } from './source/get-directory-structure.js';
+import { handleClearCache } from './source/clear-cache.js';
+import { handleSearchCode } from './source/search-code.js';
+import { handleGetSourceFiles } from './source/get-source-files.js';
+import { handleGetRateLimit } from './source/get-rate-limit.js';
+import { schema as clearCacheSchema } from './source/clear-cache.js';
+import { schema as searchCodeSchema } from './source/search-code.js';
+import { schema as getSourceFilesSchema } from './source/get-source-files.js';
+import { schema as getRateLimitSchema } from './source/get-rate-limit.js';
 
 // LibreChat-specific tools
 import { handleGetHook } from './librechat/get-hook.js';
@@ -37,6 +45,10 @@ export const toolHandlers = {
   get_source_file: handleGetSourceFile,
   list_files: handleListFiles,
   get_directory_structure: handleGetDirectoryStructure,
+  clear_cache: handleClearCache,
+  search_code: handleSearchCode,
+  get_source_files: handleGetSourceFiles,
+  get_rate_limit: handleGetRateLimit,
   // LibreChat-specific tools
   get_hook: handleGetHook,
   list_hooks: handleListHooks,
@@ -55,6 +67,10 @@ export const toolSchemas = {
   get_source_file: getSourceFileSchema,
   list_files: listFilesSchema,
   get_directory_structure: getDirectoryStructureSchema,
+  clear_cache: clearCacheSchema,
+  search_code: searchCodeSchema,
+  get_source_files: getSourceFilesSchema,
+  get_rate_limit: getRateLimitSchema,
   get_hook: getHookSchema,
   list_hooks: listHooksSchema,
   get_component: getComponentSchema,
@@ -93,6 +109,43 @@ export const tools = {
     inputSchema: {
       type: 'object',
       properties: getDirectoryStructureSchema
+    }
+  },
+
+  // ===== Cache & Search Tools =====
+  'clear_cache': {
+    name: 'clear_cache',
+    description: 'Clear the server cache. Optionally specify a prefix to clear only matching entries.',
+    inputSchema: {
+      type: 'object',
+      properties: clearCacheSchema
+    }
+  },
+  'search_code': {
+    name: 'search_code',
+    description: 'Search for code in the LibreChat Client package using GitHub Code Search API.',
+    inputSchema: {
+      type: 'object',
+      properties: searchCodeSchema,
+      required: ['query']
+    }
+  },
+  'get_source_files': {
+    name: 'get_source_files',
+    description: 'Fetch multiple source files in parallel. Returns results keyed by file path with individual success/failure status.',
+    inputSchema: {
+      type: 'object',
+      properties: getSourceFilesSchema,
+      required: ['filePaths']
+    }
+  },
+
+  'get_rate_limit': {
+    name: 'get_rate_limit',
+    description: 'Get the current GitHub API rate limit status, including tracked headers and API quota.',
+    inputSchema: {
+      type: 'object',
+      properties: getRateLimitSchema
     }
   },
 

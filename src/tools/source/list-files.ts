@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleListFiles({ directory }: { directory?: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const files = await axios.listFiles(directory);
-    return {
-      content: [{ type: "text", text: JSON.stringify(files, null, 2) }]
-    };
-  } catch (error) {
-    logError(`Failed to list files in "${directory || 'root'}"`, error);
-    throw new Error(`Failed to list files: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleListFiles = createToolHandler(
+  ({ directory }: { directory?: string }) => axios.listFiles(directory),
+  'Failed to list files'
+);
 
 export const schema = {
   directory: {

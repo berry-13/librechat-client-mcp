@@ -1,17 +1,9 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetStore() {
-  try {
-    const axios = await getAxiosImplementation();
-    const sourceCode = await axios.getStore();
-    return {
-      content: [{ type: "text", text: sourceCode }]
-    };
-  } catch (error) {
-    logError('Failed to get store', error);
-    throw new Error(`Failed to get store: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetStore = createToolHandler(
+  () => axios.getStore(),
+  'Failed to get store'
+);
 
 export const schema = {};

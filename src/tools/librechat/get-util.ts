@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetUtil({ utilName }: { utilName: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const sourceCode = await axios.getUtil(utilName);
-    return {
-      content: [{ type: "text", text: sourceCode }]
-    };
-  } catch (error) {
-    logError(`Failed to get util "${utilName}"`, error);
-    throw new Error(`Failed to get util "${utilName}": ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetUtil = createToolHandler(
+  ({ utilName }: { utilName: string }) => axios.getUtil(utilName),
+  'Failed to get util'
+);
 
 export const schema = {
   utilName: {

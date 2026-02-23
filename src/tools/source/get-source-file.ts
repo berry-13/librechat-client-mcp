@@ -1,18 +1,10 @@
-import { getAxiosImplementation } from '../../utils/axios.js';
-import { logError } from '../../utils/logger.js';
+import { axios } from '../../utils/axios.js';
+import { createToolHandler } from '../create-handler.js';
 
-export async function handleGetSourceFile({ filePath }: { filePath: string }) {
-  try {
-    const axios = await getAxiosImplementation();
-    const sourceCode = await axios.getSourceFile(filePath);
-    return {
-      content: [{ type: "text", text: sourceCode }]
-    };
-  } catch (error) {
-    logError(`Failed to get source file "${filePath}"`, error);
-    throw new Error(`Failed to get source file "${filePath}": ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export const handleGetSourceFile = createToolHandler(
+  ({ filePath }: { filePath: string }) => axios.getSourceFile(filePath),
+  'Failed to get source file'
+);
 
 export const schema = {
   filePath: {

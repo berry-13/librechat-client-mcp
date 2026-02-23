@@ -1,5 +1,7 @@
 import { Axios } from "axios";
 import { logError, logWarning, logInfo } from './logger.js';
+import { cache } from './cache.js';
+import { withRetry } from './retry.js';
 
 // Constants for the LibreChat Client package in the LibreChat monorepo
 const REPO_OWNER = 'danny-avila';
@@ -28,6 +30,36 @@ const githubApi = new Axios({
     }],
 });
 
+// Rate limit state tracking
+const rateLimitState = {
+    limit: 0,
+    remaining: -1,
+    reset: 0,
+    used: 0,
+};
+
+// Response interceptor to track rate limit headers
+githubApi.interceptors.response.use((response) => {
+    const headers = response.headers;
+    if (headers) {
+        const limit = parseInt(headers['x-ratelimit-limit'] as string, 10);
+        const remaining = parseInt(headers['x-ratelimit-remaining'] as string, 10);
+        const reset = parseInt(headers['x-ratelimit-reset'] as string, 10);
+        const used = parseInt(headers['x-ratelimit-used'] as string, 10);
+
+        if (!isNaN(limit)) rateLimitState.limit = limit;
+        if (!isNaN(remaining)) rateLimitState.remaining = remaining;
+        if (!isNaN(reset)) rateLimitState.reset = reset;
+        if (!isNaN(used)) rateLimitState.used = used;
+
+        if (!isNaN(remaining) && remaining < 10) {
+            const resetDate = new Date(reset * 1000).toISOString();
+            logWarning(`GitHub API rate limit low: ${remaining}/${limit} remaining, resets at ${resetDate}`);
+        }
+    }
+    return response;
+});
+
 // GitHub Raw for directly fetching file contents
 const githubRaw = new Axios({
     baseURL: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}`,
@@ -44,15 +76,15 @@ const githubRaw = new Axios({
  * @returns Promise with file content
  */
 async function getSourceFile(filePath: string): Promise<string> {
-    try {
-        const response = await githubRaw.get(`/${filePath}`);
-        if (response.status !== 200) {
-            throw new Error(`File not found: ${filePath}`);
-        }
-        return response.data;
-    } catch (error) {
-        throw new Error(`File "${filePath}" not found in repository`);
-    }
+    return cache.getOrFetch(`file:${filePath}`, () =>
+        withRetry(async () => {
+            const response = await githubRaw.get(`/${filePath}`);
+            if (response.status !== 200) {
+                throw new Error(`File not found: ${filePath}`);
+            }
+            return response.data;
+        })
+    );
 }
 
 /**
@@ -63,30 +95,22 @@ async function getSourceFile(filePath: string): Promise<string> {
 async function listFiles(directory?: string): Promise<any[]> {
     const path = directory || DEFAULT_PATH;
 
-    try {
-        const response = await githubApi.get(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${REPO_BRANCH}`);
+    return cache.getOrFetch(`dir:${path}`, () =>
+        withRetry(async () => {
+            const response = await githubApi.get(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${REPO_BRANCH}`);
 
-        if (!response.data || !Array.isArray(response.data)) {
-            throw new Error('Invalid response from GitHub API');
-        }
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error('Invalid response from GitHub API');
+            }
 
-        return response.data.map((item: any) => ({
-            name: item.name,
-            path: item.path,
-            type: item.type,
-            size: item.size,
-        }));
-    } catch (error: any) {
-        logError(`Error listing files in ${path}`, error);
-
-        if (error.response?.status === 403) {
-            throw new Error(`GitHub API rate limit exceeded. Please set GITHUB_PERSONAL_ACCESS_TOKEN environment variable for higher limits.`);
-        } else if (error.response?.status === 404) {
-            throw new Error(`Directory not found: ${path}`);
-        }
-
-        throw error;
-    }
+            return response.data.map((item: any) => ({
+                name: item.name,
+                path: item.path,
+                type: item.type,
+                size: item.size,
+            }));
+        })
+    );
 }
 
 /**
@@ -98,7 +122,9 @@ async function buildDirectoryTree(path?: string): Promise<any> {
     const targetPath = path || DEFAULT_PATH;
 
     try {
-        const response = await githubApi.get(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${targetPath}?ref=${REPO_BRANCH}`);
+        const response = await withRetry(() =>
+            githubApi.get(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${targetPath}?ref=${REPO_BRANCH}`)
+        );
 
         if (!response.data) {
             throw new Error('No data received from GitHub API');
@@ -218,6 +244,24 @@ async function getGitHubRateLimit(): Promise<any> {
 }
 
 /**
+ * Resolve a file path by trying multiple extensions
+ * @param basePath Base directory path
+ * @param name File name without extension
+ * @param extensions Extensions to try in order
+ * @returns Promise with file content
+ */
+async function getFileWithFallback(basePath: string, name: string, extensions = ['.ts', '.tsx']): Promise<string> {
+    for (let i = 0; i < extensions.length; i++) {
+        try {
+            return await getSourceFile(`${basePath}/${name}${extensions[i]}`);
+        } catch (error) {
+            if (i === extensions.length - 1) throw error;
+        }
+    }
+    throw new Error(`File not found: ${basePath}/${name}`);
+}
+
+/**
  * LibreChat Client specific paths
  */
 const CLIENT_PATHS = {
@@ -238,17 +282,10 @@ const CLIENT_PATHS = {
  * @returns Promise with hook source code
  */
 async function getHook(hookName: string): Promise<string> {
-    // Normalize hook name
-    let normalizedName = hookName;
-    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
-        // Try .ts first, then .tsx
-        try {
-            return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}.ts`);
-        } catch {
-            return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}.tsx`);
-        }
+    if (hookName.endsWith('.ts') || hookName.endsWith('.tsx')) {
+        return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${hookName}`);
     }
-    return await getSourceFile(`${CLIENT_PATHS.HOOKS}/${normalizedName}`);
+    return await getFileWithFallback(CLIENT_PATHS.HOOKS, hookName, ['.ts', '.tsx']);
 }
 
 /**
@@ -265,16 +302,10 @@ async function listHooks(): Promise<any[]> {
  * @returns Promise with component source code
  */
 async function getComponent(componentPath: string): Promise<string> {
-    let normalizedPath = componentPath;
-    if (!normalizedPath.endsWith('.ts') && !normalizedPath.endsWith('.tsx')) {
-        // Try .tsx first for components, then .ts
-        try {
-            return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}.tsx`);
-        } catch {
-            return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}.ts`);
-        }
+    if (componentPath.endsWith('.ts') || componentPath.endsWith('.tsx')) {
+        return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${componentPath}`);
     }
-    return await getSourceFile(`${CLIENT_PATHS.COMPONENTS}/${normalizedPath}`);
+    return await getFileWithFallback(CLIENT_PATHS.COMPONENTS, componentPath, ['.tsx', '.ts']);
 }
 
 /**
@@ -293,15 +324,10 @@ async function listComponents(subdir?: string): Promise<any[]> {
  * @returns Promise with provider source code
  */
 async function getProvider(providerName: string): Promise<string> {
-    let normalizedName = providerName;
-    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
-        try {
-            return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}.tsx`);
-        } catch {
-            return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}.ts`);
-        }
+    if (providerName.endsWith('.ts') || providerName.endsWith('.tsx')) {
+        return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${providerName}`);
     }
-    return await getSourceFile(`${CLIENT_PATHS.PROVIDERS}/${normalizedName}`);
+    return await getFileWithFallback(CLIENT_PATHS.PROVIDERS, providerName, ['.tsx', '.ts']);
 }
 
 /**
@@ -318,15 +344,10 @@ async function listProviders(): Promise<any[]> {
  * @returns Promise with utility source code
  */
 async function getUtil(utilName: string): Promise<string> {
-    let normalizedName = utilName;
-    if (!normalizedName.endsWith('.ts') && !normalizedName.endsWith('.tsx')) {
-        try {
-            return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}.ts`);
-        } catch {
-            return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}.tsx`);
-        }
+    if (utilName.endsWith('.ts') || utilName.endsWith('.tsx')) {
+        return await getSourceFile(`${CLIENT_PATHS.UTILS}/${utilName}`);
     }
-    return await getSourceFile(`${CLIENT_PATHS.UTILS}/${normalizedName}`);
+    return await getFileWithFallback(CLIENT_PATHS.UTILS, utilName, ['.ts', '.tsx']);
 }
 
 /**
@@ -366,6 +387,16 @@ async function getIndex(): Promise<string> {
     return await getSourceFile(`${CLIENT_PATHS.SRC}/index.ts`);
 }
 
+/**
+ * Get the current rate limit state from tracked response headers
+ */
+function getRateLimitState() {
+    return {
+        ...rateLimitState,
+        resetDate: rateLimitState.reset ? new Date(rateLimitState.reset * 1000).toISOString() : null,
+    };
+}
+
 export const axios = {
     githubRaw,
     githubApi,
@@ -374,6 +405,7 @@ export const axios = {
     buildDirectoryTree,
     setGitHubApiKey,
     getGitHubRateLimit,
+    getRateLimitState,
     // LibreChat specific functions
     getHook,
     listHooks,
@@ -395,9 +427,3 @@ export const axios = {
     }
 };
 
-/**
- * Get the axios implementation (for compatibility with tool imports)
- */
-export async function getAxiosImplementation() {
-    return axios;
-}

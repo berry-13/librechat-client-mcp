@@ -13,21 +13,10 @@ export const resourceTemplates = [
   {
     name: "get_installation_guide",
     description: "Get information about the LibreChat Client package structure",
-    uriTemplate: "resource-template:get_installation_guide?packageManager={packageManager}",
+    uriTemplate: "resource-template:get_installation_guide",
     contentType: "text/plain",
   },
 ];
-
-/**
- * Extract parameters from URI
- * @param uri URI to extract from
- * @param paramName Name of parameter to extract
- * @returns Parameter value or undefined
- */
-function extractParam(uri: string, paramName: string): string | undefined {
-  const match = uri.match(new RegExp(`${paramName}=([^&]+)`));
-  return match?.[1];
-}
 
 /**
  * Gets a resource template handler for a given URI
